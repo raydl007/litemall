@@ -75,7 +75,7 @@ public class LitemallOrderService {
 
     public List<LitemallOrder> queryByOrderStatus(Integer userId, List<Short> orderStatus) {
         LitemallOrderExample example = new LitemallOrderExample();
-        example.orderBy(LitemallOrder.Column.addTime.desc());
+        example.setOrderByClause(LitemallOrder.Column.addTime.desc());
         LitemallOrderExample.Criteria criteria = example.or();
         criteria.andUserIdEqualTo(userId);
         if(orderStatus != null) {
@@ -100,7 +100,7 @@ public class LitemallOrderService {
         return orderMapper.updateByPrimaryKeySelective(order);
     }
 
-    public List<LitemallOrder> querySelective(Integer userId, String orderSn, Integer page, Integer size, String sort, String order) {
+    public List<LitemallOrder> querySelective(Integer userId, String orderSn, List<Short> orderStatusArray, Integer page, Integer size, String sort, String order) {
         LitemallOrderExample example = new LitemallOrderExample();
         LitemallOrderExample.Criteria criteria = example.createCriteria();
 
@@ -110,13 +110,20 @@ public class LitemallOrderService {
         if(!StringUtils.isEmpty(orderSn)){
             criteria.andOrderSnEqualTo(orderSn);
         }
+        if(orderStatusArray != null && orderStatusArray.size() != 0){
+            criteria.andOrderStatusIn(orderStatusArray);
+        }
         criteria.andDeletedEqualTo(false);
+
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
 
         PageHelper.startPage(page, size);
         return orderMapper.selectByExample(example);
     }
 
-    public int countSelective(Integer userId, String orderSn, Integer page, Integer size, String sort, String order) {
+    public int countSelective(Integer userId, String orderSn, List<Short> orderStatusArray, Integer page, Integer size, String sort, String order) {
         LitemallOrderExample example = new LitemallOrderExample();
         LitemallOrderExample.Criteria criteria = example.createCriteria();
 
@@ -136,12 +143,7 @@ public class LitemallOrderService {
     }
 
     public void deleteById(Integer id) {
-        LitemallOrder order = orderMapper.selectByPrimaryKey(id);
-        if(order == null){
-            return;
-        }
-        order.setDeleted(true);
-        orderMapper.updateByPrimaryKey(order);
+        orderMapper.logicalDeleteByPrimaryKey(id);
     }
 
     public int count() {
@@ -158,7 +160,7 @@ public class LitemallOrderService {
 
     public List<LitemallOrder> queryUnconfirm() {
         LitemallOrderExample example = new LitemallOrderExample();
-        example.or().andOrderStatusEqualTo(OrderUtil.STATUS_SHIP).andShipEndTimeIsNotNull().andDeletedEqualTo(false);
+        example.or().andOrderStatusEqualTo(OrderUtil.STATUS_SHIP).andShipTimeIsNotNull().andDeletedEqualTo(false);
         return orderMapper.selectByExample(example);
     }
 

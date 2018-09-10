@@ -34,12 +34,7 @@ public class LitemallFootprintService {
     }
 
     public void deleteById(Integer id){
-        LitemallFootprint footprint = footprintMapper.selectByPrimaryKey(id);
-        if(footprint == null){
-            return;
-        }
-        footprint.setDeleted(true);
-        footprintMapper.updateByPrimaryKey(footprint);
+        footprintMapper.logicalDeleteByPrimaryKey(id);
     }
 
     public void add(LitemallFootprint footprint) {
@@ -57,6 +52,10 @@ public class LitemallFootprintService {
             criteria.andGoodsIdEqualTo(Integer.valueOf(goodsId));
         }
         criteria.andDeletedEqualTo(false);
+
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
 
         PageHelper.startPage(page, size);
         return footprintMapper.selectByExample(example);
@@ -76,9 +75,4 @@ public class LitemallFootprintService {
 
         return (int)footprintMapper.countByExample(example);
     }
-
-    public void updateById(LitemallFootprint collect) {
-        footprintMapper.updateByPrimaryKeySelective(collect);
-    }
-
 }

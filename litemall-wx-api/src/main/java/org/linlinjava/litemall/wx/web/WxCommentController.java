@@ -3,15 +3,16 @@ package org.linlinjava.litemall.wx.web;
 import org.apache.commons.lang3.ObjectUtils;
 import org.linlinjava.litemall.db.domain.LitemallComment;
 import org.linlinjava.litemall.db.service.LitemallCommentService;
-import org.linlinjava.litemall.db.service.LitemallCouponService;
 import org.linlinjava.litemall.db.service.LitemallUserService;
 import org.linlinjava.litemall.core.util.ResponseUtil;
 import org.linlinjava.litemall.wx.annotation.LoginUser;
 import org.linlinjava.litemall.wx.service.UserInfoService;
 import org.linlinjava.litemall.wx.dao.UserInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -20,13 +21,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/wx/comment")
+@Validated
 public class WxCommentController {
     @Autowired
     private LitemallCommentService commentService;
     @Autowired
     private LitemallUserService userService;
-    @Autowired
-    private LitemallCouponService couponService;
     @Autowired
     private UserInfoService userInfoService;
 
@@ -66,8 +66,8 @@ public class WxCommentController {
     /**
      * 评论数量
      *
-     * @param typeId 类型ID。 如果是0，则查询商品评论；如果是1，则查询专题评论。
-     * @param valueId 商品或专题ID。如果typeId是0，则是商品ID；如果typeId是1，则是专题ID。
+     * @param type 类型ID。 如果是0，则查询商品评论；如果是1，则查询专题评论。
+     * @param valueId 商品或专题ID。如果type是0，则是商品ID；如果type是1，则是专题ID。
      * @return 评论数量
      *   成功则
      *  {
@@ -82,10 +82,10 @@ public class WxCommentController {
      *   失败则 { errno: XXX, errmsg: XXX }
      */
     @GetMapping("count")
-    public Object count(Byte typeId, Integer valueId) {
-        int allCount = commentService.count(typeId, valueId, 0, 0, 0);
-        int hasPicCount = commentService.count(typeId, valueId, 1, 0, 0);
-        Map<String, Object> data = new HashMap();
+    public Object count(@NotNull Byte type, @NotNull Integer valueId) {
+        int allCount = commentService.count(type, valueId, 0, 0, 0);
+        int hasPicCount = commentService.count(type, valueId, 1, 0, 0);
+        Map<String, Object> data = new HashMap<String, Object>();
         data.put("allCount", allCount);
         data.put("hasPicCount", hasPicCount);
         return ResponseUtil.ok(data);
@@ -94,8 +94,8 @@ public class WxCommentController {
     /**
      * 评论列表
      *
-     * @param typeId 类型ID。 如果是0，则查询商品评论；如果是1，则查询专题评论。
-     * @param valueId 商品或专题ID。如果typeId是0，则是商品ID；如果typeId是1，则是专题ID。
+     * @param type 类型ID。 如果是0，则查询商品评论；如果是1，则查询专题评论。
+     * @param valueId 商品或专题ID。如果type是0，则是商品ID；如果type是1，则是专题ID。
      * @param showType 显示类型。如果是0，则查询全部；如果是1，则查询有图片的评论。
      * @param page 分页页数
      * @param size 分页大小
@@ -114,15 +114,13 @@ public class WxCommentController {
      *   失败则 { errno: XXX, errmsg: XXX }
      */
     @GetMapping("list")
-    public Object list(Byte typeId, Integer valueId, Integer showType,
-                       @RequestParam(value = "page", defaultValue = "1") Integer page,
-                       @RequestParam(value = "size", defaultValue = "10") Integer size) {
-        if(!ObjectUtils.allNotNull(typeId, valueId, showType)){
-            return ResponseUtil.badArgument();
-        }
-
-        List<LitemallComment> commentList = commentService.query(typeId, valueId, showType, page, size);
-        int count = commentService.count(typeId, valueId, showType, page, size);
+    public Object list(@NotNull Byte type,
+                       @NotNull Integer valueId,
+                       @NotNull Integer showType,
+                       @RequestParam(defaultValue = "1") Integer page,
+                       @RequestParam(defaultValue = "10") Integer size) {
+        List<LitemallComment> commentList = commentService.query(type, valueId, showType, page, size);
+        int count = commentService.count(type, valueId, showType, page, size);
 
         List<Map<String, Object>> commentVoList = new ArrayList<>(commentList.size());
         for(LitemallComment comment : commentList){
@@ -135,7 +133,7 @@ public class WxCommentController {
 
             commentVoList.add(commentVo);
         }
-        Map<String, Object> data = new HashMap();
+        Map<String, Object> data = new HashMap<String, Object>();
         data.put("data", commentVoList);
         data.put("count", count);
         data.put("currentPage", page);

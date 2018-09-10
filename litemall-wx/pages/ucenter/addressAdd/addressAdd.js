@@ -1,5 +1,7 @@
 var util = require('../../../utils/util.js');
 var api = require('../../../config/api.js');
+var check = require('../../../utils/check.js');
+
 var app = getApp();
 Page({
   data: {
@@ -285,6 +287,10 @@ Page({
       return false;
     }
 
+    if (!check.isValidPhone(address.mobile)) {
+      util.showErrorToast('手机号不正确');
+      return false;
+    }
 
     let that = this;
     util.request(api.AddressSave, { 
@@ -301,6 +307,22 @@ Page({
       countyName: address.areaName
     }, 'POST').then(function (res) {
       if (res.errno === 0) {
+        //返回之前，先取出上一页对象，并设置addressId
+        var pages = getCurrentPages();
+        var prevPage = pages[pages.length - 2];
+        console.log(prevPage);
+        if (prevPage.route == "pages/checkout/checkout") {
+          prevPage.setData({
+            addressId: res.data
+          })
+
+          try {
+            wx.setStorageSync('addressId', res.data);
+          } catch (e) {
+
+          }
+          console.log("set address");
+        }
         wx.navigateBack();
       }
     });

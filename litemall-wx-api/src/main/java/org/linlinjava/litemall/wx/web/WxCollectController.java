@@ -9,8 +9,10 @@ import org.linlinjava.litemall.core.util.JacksonUtil;
 import org.linlinjava.litemall.core.util.ResponseUtil;
 import org.linlinjava.litemall.wx.annotation.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/wx/collect")
+@Validated
 public class WxCollectController {
     @Autowired
     private LitemallCollectService collectService;
@@ -29,7 +32,7 @@ public class WxCollectController {
      * 用户收藏列表
      *
      * @param userId 用户ID
-     * @param typeId 类型ID
+     * @param type 类型，如果是0则是商品收藏，如果是1则是专题收藏
      *    目前没有使用
      * @param page 分页页数
      * @param size 分页大小
@@ -47,37 +50,35 @@ public class WxCollectController {
      *   失败则 { errno: XXX, errmsg: XXX }
      */
     @GetMapping("list")
-    public Object list(@LoginUser Integer userId, Integer typeId,
-                       @RequestParam(value = "page", defaultValue = "1") Integer page,
-                       @RequestParam(value = "size", defaultValue = "10") Integer size) {
+    public Object list(@LoginUser Integer userId,
+                       @NotNull Byte type,
+                       @RequestParam(defaultValue = "1") Integer page,
+                       @RequestParam(defaultValue = "10") Integer size) {
         if(userId == null){
             return ResponseUtil.unlogin();
         }
-        if(typeId == null){
-            return ResponseUtil.badArgument();
-        }
 
-        List<LitemallCollect> collectList = collectService.queryByType(userId, typeId, page, size);
-        int count = collectService.countByType(userId, typeId);
+        List<LitemallCollect> collectList = collectService.queryByType(userId, type, page, size);
+        int count = collectService.countByType(userId, type);
         int totalPages = (int) Math.ceil((double) count / size);
 
         List<Object> collects = new ArrayList<>(collectList.size());
         for(LitemallCollect collect : collectList){
-            Map<String, Object> c = new HashMap();
+            Map<String, Object> c = new HashMap<String, Object>();
             c.put("id", collect.getId());
-            c.put("typeId", collect.getTypeId());
+            c.put("type", collect.getType());
             c.put("valueId", collect.getValueId());
 
             LitemallGoods goods = goodsService.findById(collect.getValueId());
             c.put("name", goods.getName());
-            c.put("goodsBrief", goods.getGoodsBrief());
-            c.put("listPicUrl", goods.getListPicUrl());
+            c.put("brief", goods.getBrief());
+            c.put("picUrl", goods.getPicUrl());
             c.put("retailPrice", goods.getRetailPrice());
 
             collects.add(c);
         }
 
-        Map<String, Object> result = new HashMap();
+        Map<String, Object> result = new HashMap<String, Object>();
         result.put("collectList", collects);
         result.put("totalPages", totalPages);
         return ResponseUtil.ok(result);
@@ -109,13 +110,13 @@ public class WxCollectController {
             return ResponseUtil.badArgument();
         }
 
-        Integer typeId = JacksonUtil.parseInteger(body, "typeId");
+        Byte type = JacksonUtil.parseByte(body, "type");
         Integer valueId = JacksonUtil.parseInteger(body, "valueId");
-        if(!ObjectUtils.allNotNull(typeId, valueId)){
+        if(!ObjectUtils.allNotNull(type, valueId)){
             return ResponseUtil.badArgument();
         }
 
-        LitemallCollect collect = collectService.queryByTypeAndValue(userId, typeId, valueId);
+        LitemallCollect collect = collectService.queryByTypeAndValue(userId, type, valueId);
 
         String handleType = null;
         if(collect != null){
@@ -127,12 +128,12 @@ public class WxCollectController {
             collect = new LitemallCollect();
             collect.setUserId(userId);
             collect.setValueId(valueId);
-            collect.setTypeId(typeId);
+            collect.setType(type);
             collect.setAddTime(LocalDateTime.now());
             collectService.add(collect);
         }
 
-        Map<String, Object> data = new HashMap();
+        Map<String, Object> data = new HashMap<String, Object>();
         data.put("type", handleType);
         return ResponseUtil.ok(data);
     }

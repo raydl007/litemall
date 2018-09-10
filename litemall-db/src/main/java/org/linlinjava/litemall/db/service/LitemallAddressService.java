@@ -30,16 +30,11 @@ public class LitemallAddressService {
     }
 
     public int update(LitemallAddress address) {
-        return addressMapper.updateByPrimaryKeySelective(address);
+        return addressMapper.updateWithVersionByPrimaryKeySelective(address.getVersion(), address);
     }
 
     public void delete(Integer id) {
-        LitemallAddress address = addressMapper.selectByPrimaryKey(id);
-        if(address == null){
-            return;
-        }
-        address.setDeleted(true);
-        addressMapper.updateByPrimaryKey(address);
+        addressMapper.logicalDeleteByPrimaryKey(id);
     }
 
     public LitemallAddress findDefault(Integer userId) {
@@ -68,6 +63,10 @@ public class LitemallAddressService {
         }
         criteria.andDeletedEqualTo(false);
 
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
+
         PageHelper.startPage(page, limit);
         return addressMapper.selectByExample(example);
     }
@@ -85,9 +84,5 @@ public class LitemallAddressService {
         criteria.andDeletedEqualTo(false);
 
         return (int)addressMapper.countByExample(example);
-    }
-
-    public void updateById(LitemallAddress address) {
-        addressMapper.updateByPrimaryKeySelective(address);
     }
 }

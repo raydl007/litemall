@@ -18,19 +18,11 @@ public class LitemallStorageService {
     public void deleteByKey(String key) {
         LitemallStorageExample example = new LitemallStorageExample();
         example.or().andKeyEqualTo(key);
-        LitemallStorage storage = new LitemallStorage();
-        storage.setDeleted(true);
-        storageMapper.updateByExampleSelective(storage, example);
+        storageMapper.logicalDeleteByExample(example);
     }
 
     public void add(LitemallStorage storageInfo) {
         storageMapper.insertSelective(storageInfo);
-    }
-
-    public LitemallStorage findByName(String filename) {
-        LitemallStorageExample example = new LitemallStorageExample();
-        example.or().andNameEqualTo(filename).andDeletedEqualTo(false);
-        return storageMapper.selectOneByExample(example);
     }
 
     public LitemallStorage findByKey(String key) {
@@ -39,10 +31,9 @@ public class LitemallStorageService {
         return storageMapper.selectOneByExample(example);
     }
 
-    public void update(LitemallStorage storageInfo) {
-        storageMapper.updateByPrimaryKeySelective(storageInfo);
+    public int update(LitemallStorage storageInfo) {
+       return storageMapper.updateWithVersionByPrimaryKeySelective(storageInfo.getVersion(), storageInfo);
     }
-
 
     public LitemallStorage findById(Integer id) {
         return storageMapper.selectByPrimaryKey(id);
@@ -59,6 +50,10 @@ public class LitemallStorageService {
             criteria.andNameLike("%" + name + "%");
         }
         criteria.andDeletedEqualTo(false);
+
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
 
         PageHelper.startPage(page, limit);
         return storageMapper.selectByExample(example);

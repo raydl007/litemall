@@ -2,14 +2,18 @@ package org.linlinjava.litemall.wx.web;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.linlinjava.litemall.core.util.RegexUtil;
 import org.linlinjava.litemall.db.domain.LitemallAddress;
 import org.linlinjava.litemall.db.service.LitemallAddressService;
 import org.linlinjava.litemall.db.service.LitemallRegionService;
 import org.linlinjava.litemall.core.util.ResponseUtil;
 import org.linlinjava.litemall.wx.annotation.LoginUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.constraints.NotNull;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +21,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/wx/address")
+@Validated
 public class WxAddressController {
     private final Log logger = LogFactory.getLog(WxAddressController.class);
 
@@ -91,12 +96,9 @@ public class WxAddressController {
      *   失败则 { errno: XXX, errmsg: XXX }
      */
     @GetMapping("detail")
-    public Object detail(@LoginUser Integer userId, Integer id) {
+    public Object detail(@LoginUser Integer userId, @NotNull Integer id) {
         if(userId == null){
             return ResponseUtil.unlogin();
-        }
-        if(id == null){
-            return ResponseUtil.badArgument();
         }
 
         LitemallAddress address = addressService.findById(id);
@@ -140,6 +142,12 @@ public class WxAddressController {
             return ResponseUtil.badArgument();
         }
 
+        // 测试收货手机号码是否正确
+        String mobile = address.getMobile();
+        if(!RegexUtil.isMobileExact(mobile)){
+            return ResponseUtil.badArgument();
+        }
+
         if(address.getIsDefault()){
             // 重置其他收获地址的默认选项
             addressService.resetDefault(userId);
@@ -147,13 +155,14 @@ public class WxAddressController {
 
         if (address.getId() == null || address.getId().equals(0)) {
             address.setId(null);
+            address.setAddTime(LocalDateTime.now());
             address.setUserId(userId);
             addressService.add(address);
         } else {
             address.setUserId(userId);
             addressService.update(address);
         }
-        return ResponseUtil.ok();
+        return ResponseUtil.ok(address.getId());
     }
 
     /**
@@ -173,8 +182,12 @@ public class WxAddressController {
         if(address == null){
             return ResponseUtil.badArgument();
         }
+        Integer id = address.getId();
+        if(id == null){
+            return ResponseUtil.badArgumentValue();
+        }
 
-        addressService.delete(address.getId());
+        addressService.delete(id);
         return ResponseUtil.ok();
     }
 }

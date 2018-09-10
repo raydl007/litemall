@@ -22,12 +22,7 @@ public class LitemallIssueService {
     }
 
     public void deleteById(Integer id) {
-        LitemallIssue issue = issueMapper.selectByPrimaryKey(id);
-        if(issue == null){
-            return;
-        }
-        issue.setDeleted(true);
-        issueMapper.updateByPrimaryKey(issue);
+        issueMapper.logicalDeleteByPrimaryKey(id);
     }
 
     public void add(LitemallIssue issue) {
@@ -42,6 +37,10 @@ public class LitemallIssueService {
             criteria.andQuestionLike("%" + question + "%" );
         }
         criteria.andDeletedEqualTo(false);
+
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
 
         PageHelper.startPage(page, size);
         return issueMapper.selectByExample(example);
@@ -59,8 +58,8 @@ public class LitemallIssueService {
         return (int)issueMapper.countByExample(example);
     }
 
-    public void updateById(LitemallIssue issue) {
-        issueMapper.updateByPrimaryKeySelective(issue);
+    public int updateById(LitemallIssue issue) {
+        return issueMapper.updateWithVersionByPrimaryKeySelective(issue.getVersion(), issue);
     }
 
     public LitemallIssue findById(Integer id) {

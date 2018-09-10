@@ -5,6 +5,7 @@ import org.linlinjava.litemall.db.dao.LitemallCartMapper;
 import org.linlinjava.litemall.db.domain.LitemallCart;
 import org.linlinjava.litemall.db.domain.LitemallCartExample;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -24,8 +25,8 @@ public class LitemallCartService {
         cartMapper.insertSelective(cart);
     }
 
-    public void update(LitemallCart cart) {
-        cartMapper.updateByPrimaryKey(cart);
+    public int update(LitemallCart cart) {
+        return cartMapper.updateWithVersionByPrimaryKeySelective(cart.getVersion(), cart);
     }
 
     public List<LitemallCart> queryByUid(int userId) {
@@ -41,18 +42,10 @@ public class LitemallCartService {
         return cartMapper.selectByExample(example);
     }
 
-    public List<LitemallCart> queryByUidAndSid(int userId, String sessionId) {
-        LitemallCartExample example = new LitemallCartExample();
-        example.or().andUserIdEqualTo(userId).andDeletedEqualTo(false);
-        return cartMapper.selectByExample(example);
-    }
-
     public int delete(List<Integer> productIdList, int userId) {
         LitemallCartExample example = new LitemallCartExample();
         example.or().andUserIdEqualTo(userId).andProductIdIn(productIdList);
-        LitemallCart cart = new LitemallCart();
-        cart.setDeleted(true);
-        return cartMapper.updateByExampleSelective(cart, example);
+        return cartMapper.logicalDeleteByExample(example);
     }
 
     public LitemallCart findById(Integer id) {
@@ -79,13 +72,17 @@ public class LitemallCartService {
         LitemallCartExample example = new LitemallCartExample();
         LitemallCartExample.Criteria criteria = example.createCriteria();
 
-        if(userId != null){
+        if(!StringUtils.isEmpty(userId)){
             criteria.andUserIdEqualTo(userId);
         }
-        if(goodsId != null){
+        if(!StringUtils.isEmpty(goodsId)){
             criteria.andGoodsIdEqualTo(goodsId);
         }
         criteria.andDeletedEqualTo(false);
+
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
 
         PageHelper.startPage(page, limit);
         return cartMapper.selectByExample(example);
@@ -107,11 +104,6 @@ public class LitemallCartService {
     }
 
     public void deleteById(Integer id) {
-        LitemallCart cart = cartMapper.selectByPrimaryKey(id);
-        if(cart == null){
-            return;
-        }
-        cart.setDeleted(true);
-        cartMapper.updateByPrimaryKey(cart);
+        cartMapper.logicalDeleteByPrimaryKey(id);
     }
 }

@@ -15,9 +15,9 @@ public class LitemallAdService {
     @Resource
     private LitemallAdMapper adMapper;
 
-    public List<LitemallAd> queryByApid(Integer i) {
+    public List<LitemallAd> queryIndex() {
         LitemallAdExample example = new LitemallAdExample();
-        example.or().andPositionEqualTo(i).andDeletedEqualTo(false);
+        example.or().andPositionEqualTo((byte) 1).andDeletedEqualTo(false).andEnabledEqualTo(true);
         return adMapper.selectByExample(example);
     }
 
@@ -25,13 +25,17 @@ public class LitemallAdService {
         LitemallAdExample example = new LitemallAdExample();
         LitemallAdExample.Criteria criteria = example.createCriteria();
 
-        if(!StringUtils.isEmpty(name)){
+        if (!StringUtils.isEmpty(name)) {
             criteria.andNameLike("%" + name + "%");
         }
-        if(!StringUtils.isEmpty(content)){
+        if (!StringUtils.isEmpty(content)) {
             criteria.andContentLike("%" + content + "%");
         }
         criteria.andDeletedEqualTo(false);
+
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
 
         PageHelper.startPage(page, limit);
         return adMapper.selectByExample(example);
@@ -41,28 +45,23 @@ public class LitemallAdService {
         LitemallAdExample example = new LitemallAdExample();
         LitemallAdExample.Criteria criteria = example.createCriteria();
 
-        if(!StringUtils.isEmpty(name)){
+        if (!StringUtils.isEmpty(name)) {
             criteria.andNameLike("%" + name + "%");
         }
-        if(!StringUtils.isEmpty(content)){
+        if (!StringUtils.isEmpty(content)) {
             criteria.andContentLike("%" + content + "%");
         }
         criteria.andDeletedEqualTo(false);
 
-        return (int)adMapper.countByExample(example);
+        return (int) adMapper.countByExample(example);
     }
 
-    public void updateById(LitemallAd ad) {
-        adMapper.updateByPrimaryKeySelective(ad);
+    public int updateById(LitemallAd ad) {
+        return adMapper.updateWithVersionByPrimaryKeySelective(ad.getVersion(), ad);
     }
 
     public void deleteById(Integer id) {
-        LitemallAd ad = adMapper.selectByPrimaryKey(id);
-        if(ad == null){
-            return;
-        }
-        ad.setDeleted(true);
-        adMapper.updateByPrimaryKey(ad);
+        adMapper.logicalDeleteByPrimaryKey(id);
     }
 
     public void add(LitemallAd ad) {

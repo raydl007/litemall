@@ -14,14 +14,6 @@ import java.util.List;
 public class LitemallRegionService {
     @Resource
     private LitemallRegionMapper regionMapper;
-    @Resource
-    private LitemallRegionProvinceMapper provinceMapper;
-    @Resource
-    private LitemallRegionCityMapper cityMapper;
-    @Resource
-    private LitemallRegionAreaMapper areaMapper;
-    @Resource
-    private LitemallRegionStreetMapper streetMapper;
 
     public List<LitemallRegion> queryByPid(Integer parentId) {
         LitemallRegionExample example = new LitemallRegionExample();
@@ -40,9 +32,14 @@ public class LitemallRegionService {
         if(!StringUtils.isEmpty(name)){
             criteria.andNameLike("%" + name + "%");
         }
-        if(code != null){
+        if(!StringUtils.isEmpty(code)){
             criteria.andCodeEqualTo(code);
         }
+
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
+
         PageHelper.startPage(page, size);
         return regionMapper.selectByExample(example);
     }

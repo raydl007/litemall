@@ -15,12 +15,6 @@ public class LitemallKeywordService {
     @Resource
     private LitemallKeywordMapper keywordsMapper;
 
-    public List<LitemallKeyword> queryDefaults() {
-        LitemallKeywordExample example = new LitemallKeywordExample();
-        example.or().andIsDefaultEqualTo(true).andDeletedEqualTo(false);
-        return keywordsMapper.selectByExample(example);
-    }
-
     public LitemallKeyword queryDefault() {
         LitemallKeywordExample example = new LitemallKeywordExample();
         example.or().andIsDefaultEqualTo(true).andDeletedEqualTo(false);
@@ -53,6 +47,10 @@ public class LitemallKeywordService {
         }
         criteria.andDeletedEqualTo(false);
 
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
+
         PageHelper.startPage(page, limit);
         return keywordsMapper.selectByExample(example);
     }
@@ -81,16 +79,11 @@ public class LitemallKeywordService {
         return keywordsMapper.selectByPrimaryKey(id);
     }
 
-    public void updateById(LitemallKeyword keywords) {
-        keywordsMapper.updateByPrimaryKeySelective(keywords);
+    public int updateById(LitemallKeyword keywords) {
+        return keywordsMapper.updateWithVersionByPrimaryKeySelective(keywords.getVersion(), keywords);
     }
 
     public void deleteById(Integer id) {
-        LitemallKeyword keywords = keywordsMapper.selectByPrimaryKey(id);
-        if(keywords == null){
-            return;
-        }
-        keywords.setDeleted(true);
-        keywordsMapper.updateByPrimaryKey(keywords);
+        keywordsMapper.logicalDeleteByPrimaryKey(id);
     }
 }

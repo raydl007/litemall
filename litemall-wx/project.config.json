@@ -28,7 +28,7 @@
 			"list": []
 		},
 		"miniprogram": {
-			"current": 0,
+			"current": 33,
 			"list": [
 				{
 					"id": -1,
@@ -52,13 +52,13 @@
 					"id": -1,
 					"name": "专题评论列表",
 					"pathName": "pages/topicComment/topicComment",
-					"query": "valueId=314&typeId=1"
+					"query": "valueId=314&type=1"
 				},
 				{
 					"id": -1,
 					"name": "专题评论添加",
 					"pathName": "pages/topicCommentPost/topicCommentPost",
-					"query": "valueId=314&typeId=1"
+					"query": "valueId=314&type=1"
 				},
 				{
 					"id": -1,
@@ -112,7 +112,7 @@
 					"id": -1,
 					"name": "商品评论列表",
 					"pathName": "pages/comment/comment",
-					"query": "valueId=1181000&typeId=0"
+					"query": "valueId=1181000&type=0"
 				},
 				{
 					"id": -1,
@@ -124,18 +124,6 @@
 					"id": -1,
 					"name": "下单",
 					"pathName": "pages/shopping/checkout/checkout",
-					"query": ""
-				},
-				{
-					"id": -1,
-					"name": "下单地址",
-					"pathName": "pages/shopping/address/address",
-					"query": ""
-				},
-				{
-					"id": -1,
-					"name": "下单地址添加",
-					"pathName": "pages/shopping/addressAdd/addressAdd",
 					"query": ""
 				},
 				{
@@ -163,16 +151,16 @@
 					"query": "id=1"
 				},
 				{
-					"id": -1,
+					"id": 22,
 					"name": "待评价的订单详情",
 					"pathName": "pages/ucenter/orderDetail/orderDetail",
-					"query": "id=24"
+					"query": "id=1"
 				},
 				{
 					"id": -1,
 					"name": "购买商品评价",
 					"pathName": "pages/commentPost/commentPost",
-					"query": "orderId=2&typeId=0&valueId=1116011"
+					"query": "orderId=2&type=0&valueId=1116011"
 				},
 				{
 					"id": -1,
@@ -212,6 +200,12 @@
 				},
 				{
 					"id": -1,
+					"name": "账号登录",
+					"pathName": "pages/auth/accountLogin/accountLogin",
+					"query": ""
+				},
+				{
+					"id": -1,
 					"name": "注册",
 					"pathName": "pages/auth/register/register",
 					"query": ""
@@ -220,6 +214,24 @@
 					"id": -1,
 					"name": "找回密码",
 					"pathName": "pages/auth/reset/reset",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "关于",
+					"pathName": "pages/about/about",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "测试更新",
+					"pathName": "pages/index/index",
+					"query": ""
+				},
+				{
+					"id": -1,
+					"name": "意见反馈",
+					"pathName": "pages/ucenter/feedback/feedback",
 					"query": ""
 				}
 			]

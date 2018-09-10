@@ -21,33 +21,28 @@ public class LitemallCollectService {
         return (int)collectMapper.countByExample(example);
     }
 
-    public List<LitemallCollect> queryByType(Integer userId, Integer typeId, Integer page, Integer size) {
+    public List<LitemallCollect> queryByType(Integer userId, Byte type, Integer page, Integer size) {
         LitemallCollectExample example = new LitemallCollectExample();
-        example.or().andUserIdEqualTo(userId).andTypeIdEqualTo(typeId).andDeletedEqualTo(false);
+        example.or().andUserIdEqualTo(userId).andTypeEqualTo(type).andDeletedEqualTo(false);
         example.setOrderByClause(LitemallCollect.Column.addTime.desc());
         PageHelper.startPage(page, size);
         return collectMapper.selectByExample(example);
     }
 
-    public int countByType(Integer userId, Integer typeId) {
+    public int countByType(Integer userId, Byte type) {
         LitemallCollectExample example = new LitemallCollectExample();
-        example.or().andUserIdEqualTo(userId).andTypeIdEqualTo(typeId).andDeletedEqualTo(false);
+        example.or().andUserIdEqualTo(userId).andTypeEqualTo(type).andDeletedEqualTo(false);
         return (int)collectMapper.countByExample(example);
     }
 
-    public LitemallCollect queryByTypeAndValue(Integer userId, Integer typeId, Integer valueId) {
+    public LitemallCollect queryByTypeAndValue(Integer userId, Byte type, Integer valueId) {
         LitemallCollectExample example = new LitemallCollectExample();
-        example.or().andUserIdEqualTo(userId).andValueIdEqualTo(valueId).andTypeIdEqualTo(typeId).andDeletedEqualTo(false);
+        example.or().andUserIdEqualTo(userId).andValueIdEqualTo(valueId).andTypeEqualTo(type).andDeletedEqualTo(false);
         return collectMapper.selectOneByExample(example);
     }
 
     public void deleteById(Integer id) {
-        LitemallCollect collect = collectMapper.selectByPrimaryKey(id);
-        if(collect == null){
-            return;
-        }
-        collect.setDeleted(true);
-        collectMapper.updateByPrimaryKey(collect);
+        collectMapper.logicalDeleteByPrimaryKey(id);
     }
 
     public int add(LitemallCollect collect) {
@@ -66,6 +61,10 @@ public class LitemallCollectService {
         }
         criteria.andDeletedEqualTo(false);
 
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
+
         PageHelper.startPage(page, size);
         return collectMapper.selectByExample(example);
     }
@@ -83,13 +82,5 @@ public class LitemallCollectService {
         criteria.andDeletedEqualTo(false);
 
         return (int)collectMapper.countByExample(example);
-    }
-
-    public void updateById(LitemallCollect collect) {
-        collectMapper.updateByPrimaryKeySelective(collect);
-    }
-
-    public LitemallCollect findById(Integer id) {
-        return collectMapper.selectByPrimaryKey(id);
     }
 }

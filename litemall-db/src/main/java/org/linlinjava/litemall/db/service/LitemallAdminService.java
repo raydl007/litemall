@@ -32,6 +32,10 @@ public class LitemallAdminService {
         }
         criteria.andDeletedEqualTo(false);
 
+        if (!StringUtils.isEmpty(sort) && !StringUtils.isEmpty(order)) {
+            example.setOrderByClause(sort + " " + order);
+        }
+        
         PageHelper.startPage(page, limit);
         return adminMapper.selectByExampleSelective(example, result);
     }
@@ -48,17 +52,12 @@ public class LitemallAdminService {
         return (int)adminMapper.countByExample(example);
     }
 
-    public void updateById(LitemallAdmin admin) {
-        adminMapper.updateByPrimaryKeySelective(admin);
+    public int updateById(LitemallAdmin admin) {
+        return adminMapper.updateWithVersionByPrimaryKeySelective(admin.getVersion(), admin);
     }
 
     public void deleteById(Integer id) {
-        LitemallAdmin admin = adminMapper.selectByPrimaryKey(id);
-        if(admin == null){
-            return;
-        }
-        admin.setDeleted(true);
-        adminMapper.updateByPrimaryKey(admin);
+        adminMapper.logicalDeleteByPrimaryKey(id);
     }
 
     public void add(LitemallAdmin admin) {
